@@ -1,0 +1,15 @@
+{
+  "domain": "tecnoalarm_tecno_out",
+  "name": "Tecnoalarm-TecnoOUT",
+  "version": "1.0.0",
+  "documentation": "https://your-documentation-url.com",
+  "requirements": [
+    "pycryptodome>=3.21.0"
+  ],
+  "codeowners": [
+    "@FreeTecnoOutCrew"
+  ],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "integration_type": "hub"
+}
