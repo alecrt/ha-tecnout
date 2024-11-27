@@ -5,7 +5,7 @@ import struct
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
-from config.custom_components.tecnoalarm_tecno_out.lib import (
+from .entities import (
     ControlPanelInfo,
     GeneralStatus,
     ProgramStatus,
@@ -21,7 +21,8 @@ class TecnoOutClient:
     """TecnoOutClient is a class that allows interfacing with Tecnoalarm control panels using the Tecno Out protocol."""
 
     def __init__(self, host, port, user_code, passphrase: str, legacy=False) -> None:
-        """Initialize the TecnoOutClient.
+        """
+        Initialize the TecnoOutClient.
 
         :param host: The IP address of the Tecnoalarm control panel.
         :param port: The port number to connect to.
@@ -46,7 +47,8 @@ class TecnoOutClient:
         logging.basicConfig(level=logging.DEBUG)
 
     def _format_passphrase(self, passphrase):
-        """Format the passphrase to be exactly 16 bytes long.
+        """
+        Format the passphrase to be exactly 16 bytes long.
 
         :param passphrase: The passphrase to format.
         :return: The formatted passphrase.
@@ -72,7 +74,8 @@ class TecnoOutClient:
         )
 
     def _receive_response(self):
-        """Receive a response from the Tecnoalarm control panel.
+        """
+        Receive a response from the Tecnoalarm control panel.
 
         :return: The decrypted response data.
         :raises ConnectionError: If not connected.
@@ -106,7 +109,8 @@ class TecnoOutClient:
             raise ValueError(f"Unknown response status byte: {status_byte:#02x}")
 
     def _calculate_crc16(self, msg: bytes) -> bytes:
-        """Calculate CRC16 using the Modbus RTU polynomial (0xA001) and return it as 2 bytes in little-endian order.
+        """
+        Calculate CRC16 using the Modbus RTU polynomial (0xA001) and return it as 2 bytes in little-endian order.
 
         :param msg: Input message as bytes.
         :return: CRC16 value as 2 bytes in little-endian order.
@@ -123,7 +127,8 @@ class TecnoOutClient:
         return crc.to_bytes(2, byteorder="little")
 
     def _verify_crc16(self, message: bytes):
-        """Verify the CRC16 of a received message.
+        """
+        Verify the CRC16 of a received message.
 
         :param message: The received message including the CRC (last 2 bytes).
         :raises ValueError: If the message is too short or the CRC check fails.
@@ -140,12 +145,14 @@ class TecnoOutClient:
             raise ValueError("CRC check failed.")
 
     def _get_bcd_user_code(self, number):
-        """Convert a given number to BCD format (3 bytes) in little-endian,
+        """
+        Convert a given number to BCD format (3 bytes) in little-endian,
         with digits in each byte inverted. Pads with zeros to the end if the code is shorter than 6 digits.
 
         :param number: The user code number.
         :return: The BCD formatted user code.
         :raises ValueError: If the user code is not between 0 and 999999.
+
         """
         if not (0 <= number <= 999999):
             raise ValueError("User code must be between 0 and 999999.")
@@ -167,7 +174,8 @@ class TecnoOutClient:
         self._init_encryption()
 
     def send_command(self, command: int, data: bytes = b""):
-        """Send a command to the Tecnoalarm control panel.
+        """
+        Send a command to the Tecnoalarm control panel.
 
         :param command: The command byte.
         :param data: Optional data to send with the command.
@@ -195,7 +203,8 @@ class TecnoOutClient:
         return self._receive_response()
 
     def get_info(self) -> ControlPanelInfo:
-        """Get the control panel information.
+        """
+        Get the control panel information.
 
         :return: The control panel information.
         """
@@ -204,7 +213,8 @@ class TecnoOutClient:
         return ControlPanelInfo(response)
 
     def get_general_status(self) -> GeneralStatus:
-        """Get the general status of the control panel.
+        """
+        Get the general status of the control panel.
 
         :return: The general status.
         """
@@ -215,7 +225,8 @@ class TecnoOutClient:
     def get_zones_detail(
         self, zones_count: int, zone_from=1
     ) -> list[ZoneDetailedStatus]:
-        """Get detailed status of multiple zones.
+        """
+        Get detailed status of multiple zones.
 
         :param zones_count: The number of zones to retrieve.
         :param zone_from: The starting zone number.
@@ -236,7 +247,8 @@ class TecnoOutClient:
         return all_zones
 
     def get_zones_description(self, zones_count: int, zone_from=1) -> list[str]:
-        """Get descriptions of multiple zones.
+        """
+        Get descriptions of multiple zones.
 
         :param zones_count: The number of zones to retrieve.
         :param zone_from: The starting zone number.
@@ -256,7 +268,8 @@ class TecnoOutClient:
         return all_zones
 
     def get_zones_setting(self, zones_count: int, zone_from=1):
-        """Get settings of multiple zones.
+        """
+        Get settings of multiple zones.
 
         :param zones_count: The number of zones to retrieve.
         :param zone_from: The starting zone number.
@@ -276,7 +289,8 @@ class TecnoOutClient:
         return all_zones
 
     def get_programs_status(self, prg_count: int, prg_from=1):
-        """Get the status of multiple programs.
+        """
+        Get the status of multiple programs.
 
         :param prg_count: The number of programs to retrieve.
         :param prg_from: The starting program number.
@@ -287,7 +301,8 @@ class TecnoOutClient:
         return _ProgramStatusResponse(response, prg_from).programs
 
     def get_programs_description(self, prg_count: int, prg_from=1) -> list[str]:
-        """Get descriptions of multiple programs.
+        """
+        Get descriptions of multiple programs.
 
         :param prg_count: The number of programs to retrieve.
         :param prg_from: The starting program number.
@@ -307,7 +322,8 @@ class TecnoOutClient:
         return all_prgs
 
     def set_program(self, prg_idx: int, prg_status: SetProgramStatusEnum):
-        """Set the status of a program.
+        """
+        Set the status of a program.
 
         :param prg_id: The program ID.
         :param prg_status: The status to set.
@@ -317,7 +333,8 @@ class TecnoOutClient:
         return self.send_command(command, struct.pack("HB", prg_idx, prg_status.value))
 
     def get_log(self, log_number: int):
-        """Get a specific log entry.
+        """
+        Get a specific log entry.
 
         :param log_number: The log entry number.
         :return: The log entry as a string.
@@ -329,7 +346,8 @@ class TecnoOutClient:
         return response.decode("utf-8")
 
     def get_latest_logs(self, logs_count: int):
-        """Get the latest log entries.
+        """
+        Get the latest log entries.
 
         :param logs_count: The number of log entries to retrieve.
         :return: A list of log entries as strings.

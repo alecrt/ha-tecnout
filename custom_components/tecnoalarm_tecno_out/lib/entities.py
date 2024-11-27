@@ -1,5 +1,5 @@
-﻿from enum import Enum
-import json
+﻿import json
+from enum import Enum
 
 
 class ControlPanelInfo:
