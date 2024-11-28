@@ -36,7 +36,7 @@ async def async_setup_entry(
     hass: HomeAssistant,  # noqa: ARG001
     entry: TecnoOutDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Configura i sensori."""
     coordinator = entry.runtime_data.coordinator
     entities = []

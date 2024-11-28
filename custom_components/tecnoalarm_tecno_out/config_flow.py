@@ -1,9 +1,9 @@
-# config_flow.py
+"""Gestisce il flusso di configurazione per Tecnoalarm Tecnout."""
 
 from typing import Any
 
 import voluptuous as vol
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import (
     CENTRALE_SERIE_EV,
@@ -20,13 +20,15 @@ from .const import (
 )
 
 
-class TecnoalarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Gestisce il flusso di configurazione per Tecnoalarm TCS."""
+class TecnoalarmConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Gestisce il flusso di configurazione per Tecnoalarm Tecnout."""
 
     VERSION = 1
     MINOR_VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Passo iniziale dove l'utente inserisce i dati."""
         errors = {}
 
@@ -66,7 +68,9 @@ class TecnoalarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None):
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the reconfigure flow step."""
         config_entry = self.hass.config_entries.async_get_entry(
             self.context.get("entry_id", "")
@@ -102,60 +106,3 @@ class TecnoalarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="reconfigure", data_schema=data_schema)
-
-    # @staticmethod
-    # @callback
-    # def async_get_options_flow(config_entry) -> config_entries.OptionsFlow:
-    #     """Get the options flow handler for the config entry."""
-    #     return TecnoalarmOptionsFlowHandler(config_entry)
-
-
-# class TecnoalarmOptionsFlowHandler(config_entries.OptionsFlow):
-#     """Gestisce le opzioni del componente."""
-
-#     def __init__(self, config_entry) -> None:
-#         """Inizializza il flusso delle opzioni."""
-#         self.config_entry = config_entry
-
-#     async def async_step_init(self, user_input=None):
-#         """Gestisce le opzioni."""
-#         if user_input is not None:
-#             # Aggiorna i dati della configurazione con i nuovi valori
-#             self.hass.config_entries.async_update_entry(
-#                 self.config_entry, data=user_input
-#             )
-#             return self.async_create_entry(data=user_input)
-
-#         data_schema = vol.Schema(
-#             {
-#                 vol.Required(
-#                     CONF_NOME, default=self.config_entry.data.get(CONF_NOME)
-#                 ): str,
-#                 vol.Required(
-#                     CONF_HOST, default=self.config_entry.data.get(CONF_HOST)
-#                 ): str,
-#                 vol.Required(
-#                     CONF_PORT, default=self.config_entry.data.get(CONF_PORT)
-#                 ): int,
-#                 vol.Required(
-#                     CONF_CODE, default=self.config_entry.data.get(CONF_CODE)
-#                 ): int,
-#                 vol.Optional(
-#                     CONF_TOKEN, default=self.config_entry.data.get(CONF_TOKEN)
-#                 ): str,
-#                 vol.Required(
-#                     CONF_MODELLO_CENTRALE,
-#                     default=self.config_entry.data.get(
-#                         CONF_MODELLO_CENTRALE, CENTRALE_SERIE_EV
-#                     ),
-#                 ): vol.In([CENTRALE_SERIE_TP, CENTRALE_SERIE_EV]),
-#                 vol.Optional(
-#                     CONF_POLL_INTERVAL,
-#                     default=self.config_entry.data.get(
-#                         CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
-#                     ),
-#                 ): int,
-#             }
-#         )
-
-#         return self.async_show_form(step_id="init", data_schema=data_schema)

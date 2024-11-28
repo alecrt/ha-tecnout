@@ -1,7 +1,5 @@
 # __init__.py
 
-from typing import TYPE_CHECKING
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_loaded_integration
@@ -14,8 +12,10 @@ from .const import (
     CONF_CODE,
     CONF_HOST,
     CONF_MODELLO_CENTRALE,
+    CONF_POLL_INTERVAL,
     CONF_PORT,
     CONF_TOKEN,
+    DEFAULT_POLL_INTERVAL,
     DOMAIN,
 )
 from .coordinator import TecnoalarmDataUpdateCoordinator
@@ -28,7 +28,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: TecnoOutDataConfigEntry
 ) -> bool:
     """Configura il componente da una ConfigEntry."""
-    coordinator = TecnoalarmDataUpdateCoordinator(hass)
+    coordinator = TecnoalarmDataUpdateCoordinator(
+        hass, entry.data.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
+    )
 
     entry.runtime_data = TecnoOutData(
         client=TecnoOutClient(

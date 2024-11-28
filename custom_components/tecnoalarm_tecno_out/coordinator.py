@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_POLL_INTERVAL,
     DOMAIN,
 )
 
@@ -32,13 +31,13 @@ class TecnoalarmDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: TecnoOutDataConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, poll_interval: int) -> None:
         """Inizializza il coordinatore."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=poll_interval),
             always_update=False,
         )
         self._programs_name: list[str] = []
