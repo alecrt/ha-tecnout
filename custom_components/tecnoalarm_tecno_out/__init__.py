@@ -1,4 +1,9 @@
-# __init__.py
+"""
+Custom integration to integrate Tecnoalarm TecnoOUT protocol with Home Assistant.
+
+For more details about this integration, please refer to
+https://github.com/ludeeus/integration_blueprint
+"""
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
