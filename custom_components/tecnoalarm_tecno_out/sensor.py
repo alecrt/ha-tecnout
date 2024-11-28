@@ -7,12 +7,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
     TecnoalarmDataUpdateCoordinator,
 )
+from .data import TecnoOutDataConfigEntry
 from .lib import ZoneDetailedStatus
 from .lib.entities import (
     GeneralStatus,
@@ -29,9 +32,13 @@ def _format_string(input_string: str) -> str:
     return formatted_string.title()
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001
+    entry: TecnoOutDataConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Configura i sensori."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
     entities = []
 
     # Sensori per le zone

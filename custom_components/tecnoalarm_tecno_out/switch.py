@@ -1,15 +1,17 @@
 # switch.py
 
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.tecnoalarm_tecno_out.coordinator import (
-    TecnoalarmDataUpdateCoordinator,
-)
+from custom_components.tecnoalarm_tecno_out.entity import TecnoOutCoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import TecnoalarmDataUpdateCoordinator
+from .data import TecnoOutDataConfigEntry
 from .lib import (
     ProgramStatus,
     ProgramStatusEnum,
@@ -19,9 +21,13 @@ from .lib import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001
+    entry: TecnoOutDataConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Configura gli switch per i programmi."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
     entities = []
 
     # Sensori per i programmi
@@ -44,10 +50,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class TecnoalarmProgramSwitch(CoordinatorEntity, SwitchEntity):
+class TecnoalarmProgramSwitch(TecnoOutCoordinatorEntity, SwitchEntity):
     """Rappresenta uno switch per un programma."""
 
-    def __init__(self, coordinator, program_data: ProgramStatus) -> None:
+    def __init__(
+        self, coordinator: TecnoalarmDataUpdateCoordinator, program_data: ProgramStatus
+    ) -> None:
         """Inizializza lo switch."""
         super().__init__(coordinator)
         self.program_data = program_data
@@ -58,7 +66,7 @@ class TecnoalarmProgramSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_icon = "mdi:shield-home"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Ritorna True se il programma è armato o parzializzato."""
         if self.program_data.program_status.value is not None:
             return self.program_data.program_status in (
@@ -71,24 +79,23 @@ class TecnoalarmProgramSwitch(CoordinatorEntity, SwitchEntity):
         )
         return False
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **_: Any) -> None:
         """Attiva il programma."""
         await self._change_program_state(SetProgramStatusEnum.ARMED)
         await (
             self.coordinator.async_request_refresh()
         )  # Richiedi un aggiornamento immediato
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **_: Any) -> None:
         """Disattiva il programma."""
         await self._change_program_state(SetProgramStatusEnum.STANDBY)
         await (
             self.coordinator.async_request_refresh()
         )  # Richiedi un aggiornamento immediato
 
-    async def _change_program_state(self, state: SetProgramStatusEnum):
+    async def _change_program_state(self, state: SetProgramStatusEnum) -> None:
         try:
-            if isinstance(self.coordinator, TecnoalarmDataUpdateCoordinator):
-                self.coordinator.set_program_status(self.idx, state)
+            self.coordinator.set_program_status(self.idx, state)
         except Exception as e:
             _LOGGER.error(
                 "Errore durante la modifica dello stato del programma %s: %s",
@@ -96,7 +103,7 @@ class TecnoalarmProgramSwitch(CoordinatorEntity, SwitchEntity):
                 e,
             )
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Aggiorna lo stato dello switch."""
         programs = self.coordinator.data.get("programs", [])
         if self.idx < len(programs):

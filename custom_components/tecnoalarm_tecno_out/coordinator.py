@@ -8,16 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CENTRALE_SERIE_TP,
-    CONF_CODE,
-    CONF_HOST,
-    CONF_MODELLO_CENTRALE,
     CONF_POLL_INTERVAL,
-    CONF_PORT,
-    CONF_TOKEN,
     DOMAIN,
 )
-from .lib import TecnoOutClient
+
 from .lib.entities import (
     GeneralStatus,
     ProgramStatus,
@@ -25,37 +19,31 @@ from .lib.entities import (
     ZoneDetailedStatus,
 )
 
+from .const import DOMAIN
+from .data import TecnoOutDataConfigEntry
+from homeassistant.core import HomeAssistant
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class TecnoalarmDataUpdateCoordinator(DataUpdateCoordinator):
     """Gestisce il fetching dei dati dalle API Tecnoalarm."""
 
-    def __init__(self, hass: HomeAssistant, config_entry) -> None:
-        """Inizializza il coordinatore."""
-        self.hass = hass
-        self.config_entry = config_entry
-        self.host = config_entry.data[CONF_HOST]
-        self.port = config_entry.data[CONF_PORT]
-        self.user_code = config_entry.data[CONF_CODE]
-        self.token = config_entry.data[CONF_TOKEN]
-        self.modello_centrale = config_entry.data.get(CONF_MODELLO_CENTRALE)
-        self.legacy = self.modello_centrale == CENTRALE_SERIE_TP
-        poll_interval = config_entry.data.get(CONF_POLL_INTERVAL, 30)
-        self._programs_name: list[str] = []
-        self._valid_programs_count = 0
-        self._zones_dscr: list[str] = []
-        self._client = TecnoOutClient(
-            self.host, self.port, self.user_code, self.token, self.legacy
-        )
+    config_entry: TecnoOutDataConfigEntry
 
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Inizializza il coordinatore."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=poll_interval),
+            update_interval=timedelta(seconds=5),
             always_update=False,
         )
+        self._programs_name: list[str] = []
+        self._valid_programs_count = 0
+        self._zones_dscr: list[str] = []
 
     async def _async_setup(self):
         """Set up the coordinator.
@@ -66,6 +54,7 @@ class TecnoalarmDataUpdateCoordinator(DataUpdateCoordinator):
         This method will be called automatically during
         coordinator.async_config_entry_first_refresh.
         """
+        self._client = self.config_entry.runtime_data.client
         self._client.connect()
         self._info = self._client.get_info()
 
