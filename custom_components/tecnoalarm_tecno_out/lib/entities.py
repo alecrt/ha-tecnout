@@ -1,4 +1,6 @@
-﻿import json
+﻿"""Convinient entities for TecnoOUT client."""
+
+import json
 from enum import Enum
 
 
@@ -35,16 +37,25 @@ class ControlPanelInfo:
         self.bus_communicators_count = data[28]
         self.crc16 = int.from_bytes(data[30:32], "little")
 
-    def __repr__(self):
-        return f"<ControlPanelStatus firmware_nationality={self.firmware_nationality}, firmware_version={self.firmware_version}, hardware_version={self.hardware_version}, ...>"
+    def __repr__(self) -> str:
+        """Convert the object's properties into a string."""
+        return (
+            f"<ControlPanelStatus firmware_nationality={self.firmware_nationality}, "
+            f"firmware_version={self.firmware_version}, "
+            f"hardware_version={self.hardware_version}, ...>"
+        )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert the object's properties into a dictionary for easier inspection."""
         return dict(vars(self).items())
 
 
 class ZoneDetailedStatus:
-    """Represents the detailed status of a single zone as described in the 0x0F command response."""
+    """
+    Represents the detailed status of a single zone.
+
+    As described in the 0x0F command response.
+    """
 
     def __init__(self, zone_data: bytes, idx: int) -> None:
         if len(zone_data) != 2:
@@ -81,7 +92,8 @@ class ZoneDetailedStatus:
         self.alarm_24h = bool(zone_data[1] & 0b01000000)
         self.enabled = bool(zone_data[1] & 0b10000000)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Convert the object's properties into a string."""
         return (
             f"<ZoneDetailedStatus idx={self.idx} enabled={self.enabled} isolation_active={self.isolation_active}, "
             f"zone_tamper_status={self.zone_tamper_status}, zone_tamper_alarm={self.zone_tamper_alarm}, "
@@ -92,15 +104,15 @@ class ZoneDetailedStatus:
             f"pre_alarm={self.pre_alarm}, alarm={self.alarm}, alarm_24h={self.alarm_24h}>"
         )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert the object's properties into a dictionary for easier inspection."""
         return dict(vars(self).items())
 
-    def to_json(self):
+    def to_json(self) -> str:
         """Convert the object's properties into a JSON string."""
         return json.dumps(self.to_dict())
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Calculate the hash of all properties of the object."""
         return hash(
             (
@@ -165,15 +177,16 @@ class ZoneSetting:
         # BYTE 7-8: Reserved/TBD
         self.reserved = int.from_bytes(zone_data[6:8], byteorder="big")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert the object's properties into a dictionary for easier inspection."""
         return dict(vars(self).items())
 
-    def to_json(self):
+    def to_json(self) -> str:
         """Convert the object's properties into a JSON string."""
         return json.dumps(self.to_dict())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Convert the object's properties into a string."""
         return (
             f"<ZoneSetting zone_type={self.zone_type}, common_zone={self.common_zone}, "
             f"coinciding_zone={self.coinciding_zone}, can_be_partset={self.can_be_partset}, "
@@ -190,7 +203,7 @@ class GeneralStatus:
             raise ValueError("Response data must be exactly 16 bytes.")
         self._parse_response(data)
 
-    def _parse_response(self, response: bytes):
+    def _parse_response(self, response: bytes) -> None:  # noqa: PLR0915
         self.firmware_language = response[0]
         self.firmware_release = self._decode_release(response[1])
         self.hardware_release = self._decode_release(response[2])
@@ -265,23 +278,24 @@ class GeneralStatus:
         self.external_siren = bool(response[14] & 0b00000100)
 
     @staticmethod
-    def _decode_release(release_byte):
+    def _decode_release(release_byte: int) -> str:
         major = (release_byte >> 4) & 0x0F
         minor = release_byte & 0x0F
         return f"{major}.{minor}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Convert the object's properties into a string."""
         return f"<GeneralStatusResponse firmware_release={self.firmware_release}, hardware_release={self.hardware_release}, system_status_ok={self.system_status_ok}>"
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert the object's properties into a dictionary for easier inspection."""
         return dict(vars(self).items())
 
-    def to_json(self):
+    def to_json(self) -> str:
         """Convert the object's properties into a JSON string."""
         return json.dumps(self.to_dict())
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Calculate the hash of all properties of the object."""
         return hash(
             (
@@ -299,6 +313,8 @@ class GeneralStatus:
 
 
 class ProgramStatusEnum(int, Enum):
+    """Enumeration for the possible states of a program."""
+
     STANDBY = 0
     ARMING_PHASE_EXCLUSION = 1
     ARMING_PHASE_EXIT = 2
@@ -309,6 +325,8 @@ class ProgramStatusEnum(int, Enum):
 
 
 class SetProgramStatusEnum(int, Enum):
+    """Enumeration for the possible states of a program to be set from outside."""
+
     STANDBY = 0
     ARMED = 2
     END_OF_BYPASS = 4
@@ -319,6 +337,7 @@ class ProgramStatus:
     """Represents the status of a single program."""
 
     def __init__(self, status_byte: int, idx: int) -> None:
+        """Initialize ProgramStatus."""
         self.program_status = ProgramStatusEnum(status_byte & 0x0F)
         self.prealarm = bool(status_byte & 0x10)
         self.alarm = bool(status_byte & 0x20)
@@ -334,21 +353,22 @@ class ProgramStatus:
     def name(self, value: str) -> None:
         self._name = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Convert the object's properties into a string for easier inspection."""
         return (
             f"<Program idx={self.idx} program_status={self.program_status}, prealarm={self.prealarm}, "
             f"alarm={self.alarm}, alarm_memory={self.alarm_memory}, reserved={self.reserved}>"
         )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert the object's properties into a dictionary for easier inspection."""
         return dict(vars(self).items())
 
-    def to_json(self):
+    def to_json(self) -> str:
         """Convert the object's properties into a JSON string."""
         return json.dumps(self.to_dict())
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Calculate the hash of all properties of the object."""
         return hash(
             (
