@@ -327,10 +327,11 @@ class ProgramStatusEnum(int, Enum):
 class SetProgramStatusEnum(int, Enum):
     """Enumeration for the possible states of a program to be set from outside."""
 
-    STANDBY = 0
-    ARMED = 2
-    END_OF_BYPASS = 4
-    BYPASS = 5
+    STANDBY = 0  # disinserimento programma
+    AUTOARM = 1  # inserimento programma con esclusione automatica delle zone aperte
+    ARMED = 2  # inserimento programma SENZA esclusione automatica delle zone aperte
+    END_OF_BYPASS = 4  # fine parzializzazione programma
+    BYPASS = 5  # inizio parzializzazione programma
 
 
 class ProgramStatus:
