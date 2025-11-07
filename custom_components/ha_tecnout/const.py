@@ -26,7 +26,7 @@ ATTR_PROGRAM_ID: Final = "program_id"
 ATTR_PIN: Final = "pin"
 
 # Update interval
-UPDATE_INTERVAL: Final = 5  # seconds
+UPDATE_INTERVAL: Final = 1  # seconds - Fast polling for real-time zone updates
 
 # Device info
 MANUFACTURER: Final = "TecnoAlarm"

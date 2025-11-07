@@ -48,15 +48,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # Create client WITHOUT watchdog for connection test
-    # Watchdog will be enabled only when integration is fully set up
     client = TecnoOutClient(
         host=data[CONF_HOST],
         port=data[CONF_PORT],
         user_code=data[CONF_USER_CODE],
         passphrase=data.get(CONF_PASSPHRASE, "") or "",
         legacy=data.get(CONF_LEGACY, DEFAULT_LEGACY),
-        watchdog_interval=None,  # Disable watchdog during config flow test
+        watchdog_interval=data.get(CONF_WATCHDOG_INTERVAL),
     )
 
     try:
