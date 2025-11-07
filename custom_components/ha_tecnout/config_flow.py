@@ -48,24 +48,31 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    # Create client WITHOUT watchdog for connection test
+    # Watchdog will be enabled only when integration is fully set up
     client = TecnoOutClient(
         host=data[CONF_HOST],
         port=data[CONF_PORT],
         user_code=data[CONF_USER_CODE],
         passphrase=data[CONF_PASSPHRASE],
         legacy=data.get(CONF_LEGACY, DEFAULT_LEGACY),
-        watchdog_interval=data.get(CONF_WATCHDOG_INTERVAL),
+        watchdog_interval=None,  # Disable watchdog during config flow test
     )
 
     try:
         await hass.async_add_executor_job(client.connect)
         info = await hass.async_add_executor_job(client.get_info)
-        await hass.async_add_executor_job(client.close)
     except ConnectionError as err:
         raise CannotConnect from err
     except Exception as err:
         _LOGGER.exception("Unexpected exception")
         raise InvalidAuth from err
+    finally:
+        # Always close the client, even if there's an error
+        try:
+            await hass.async_add_executor_job(client.close)
+        except Exception:
+            pass  # Ignore errors during cleanup
 
     # Return info that you want to store in the config entry.
     return {

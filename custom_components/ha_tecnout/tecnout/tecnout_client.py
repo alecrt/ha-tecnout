@@ -178,7 +178,7 @@ class TecnoOutClient:
     def connect(self):
         """Establish a TCP connection to the Tecnoalarm control panel and initiate encryption."""
         with self._lock:
-            self._sock = socket.create_connection((self.host, self.port), timeout=0.5)
+            self._sock = socket.create_connection((self.host, self.port), timeout=10.0)
             self._sock.settimeout(None)
             self._init_encryption()
             
