@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
 from .tecnout.tecnout_client import TecnoOutClient
 
@@ -30,15 +31,27 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_USER_CODE): int,
-        vol.Optional(CONF_PASSPHRASE, default=""): str,
-        vol.Optional(CONF_LEGACY, default=DEFAULT_LEGACY): bool,
+        vol.Required(CONF_HOST): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+        ),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
+            selector.NumberSelectorConfig(min=1, max=65535, mode=selector.NumberSelectorMode.BOX)
+        ),
+        vol.Required(CONF_USER_CODE): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_PASSPHRASE, default=""): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_LEGACY, default=DEFAULT_LEGACY): selector.BooleanSelector(),
         vol.Optional(
             CONF_WATCHDOG_INTERVAL, default=DEFAULT_WATCHDOG_INTERVAL
-        ): vol.Coerce(float),
-        vol.Optional(CONF_CONTROL_PIN): str,
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(min=1, max=300, step=1, mode=selector.NumberSelectorMode.BOX, unit_of_measurement="s")
+        ),
+        vol.Optional(CONF_CONTROL_PIN): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -51,7 +64,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     client = TecnoOutClient(
         host=data[CONF_HOST],
         port=data[CONF_PORT],
-        user_code=data[CONF_USER_CODE],
+        user_code=int(data[CONF_USER_CODE]),
         passphrase=data.get(CONF_PASSPHRASE, "") or "",
         legacy=data.get(CONF_LEGACY, DEFAULT_LEGACY),
         watchdog_interval=data.get(CONF_WATCHDOG_INTERVAL),
