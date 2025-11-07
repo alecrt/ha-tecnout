@@ -1,0 +1,46 @@
+# Services for TecnoAlarm TecnoOut integration
+
+arm_program:
+  name: Arm program
+  description: Arms an alarm program with optional PIN verification
+  fields:
+    program_id:
+      name: Program ID
+      description: Number of the program to arm (1-N)
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 32
+    pin:
+      name: PIN
+      description: Control PIN (required if configured in the integration)
+      required: false
+      example: "1234"
+      selector:
+        text:
+          type: password
+
+disarm_program:
+  name: Disarm program
+  description: Disarms an alarm program with optional PIN verification
+  fields:
+    program_id:
+      name: Program ID
+      description: Number of the program to disarm (1-N)
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 32
+    pin:
+      name: PIN
+      description: Control PIN (required if configured in the integration)
+      required: false
+      example: "1234"
+      selector:
+        text:
+          type: password
+

@@ -1,0 +1,79 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure TecnoAlarm TecnoOut",
+        "description": "Enter your credentials to connect to the TecnoAlarm control panel",
+        "data": {
+          "host": "IP Address",
+          "port": "Port",
+          "user_code": "User Code",
+          "passphrase": "Passphrase",
+          "legacy": "Legacy Mode",
+          "watchdog_interval": "Watchdog Interval (seconds)",
+          "control_pin": "Control PIN (optional)"
+        },
+        "data_description": {
+          "host": "The IP address of the TecnoAlarm control panel",
+          "port": "The TCP port (default: 10001)",
+          "user_code": "The user code for authentication (0-999999)",
+          "passphrase": "The passphrase for AES encryption",
+          "legacy": "Enable for legacy hardware",
+          "watchdog_interval": "Interval for keep-alive (default: 30 seconds)",
+          "control_pin": "Numeric PIN required to arm/disarm via services (leave empty to disable)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the control panel",
+      "invalid_auth": "Authentication failed, check user code and passphrase",
+      "unknown": "Unknown error occurred"
+    },
+    "abort": {
+      "already_configured": "This control panel is already configured"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "zone": {
+        "name": "Zone {name}"
+      }
+    },
+    "switch": {
+      "program": {
+        "name": "Program {name}"
+      }
+    }
+  },
+  "services": {
+    "arm_program": {
+      "name": "Arm Program",
+      "description": "Arms an alarm program with optional PIN verification",
+      "fields": {
+        "program_id": {
+          "name": "Program ID",
+          "description": "Number of the program to arm (1-N)"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "Control PIN (required if configured)"
+        }
+      }
+    },
+    "disarm_program": {
+      "name": "Disarm Program",
+      "description": "Disarms an alarm program with optional PIN verification",
+      "fields": {
+        "program_id": {
+          "name": "Program ID",
+          "description": "Number of the program to disarm (1-N)"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "Control PIN (required if configured)"
+        }
+      }
+    }
+  }
+}
+

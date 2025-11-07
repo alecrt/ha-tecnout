@@ -1,0 +1,9 @@
+# Development requirements only (additional tools)
+
+# Include base requirements
+-r requirements.txt
+
+# Additional dev tools
+pre-commit>=3.5.0
+ipython>=8.12.0
+

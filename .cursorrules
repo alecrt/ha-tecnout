@@ -1,0 +1,428 @@
+# Home Assistant Integration Development Rules
+
+## Contesto Progetto
+Questo progetto è dedicato allo sviluppo di una nuova integrazione per Home Assistant.
+Seguire rigorosamente le best practice e le linee guida della documentazione ufficiale.
+Riferimento: https://developers.home-assistant.io/docs/development_index
+
+## Struttura dell'Integrazione
+
+### Directory e File Obbligatori
+```
+custom_components/
+└── <domain>/
+    ├── __init__.py          # Entry point dell'integrazione
+    ├── manifest.json        # Metadata dell'integrazione
+    ├── config_flow.py       # Flusso di configurazione UI
+    ├── const.py            # Costanti dell'integrazione
+    ├── coordinator.py      # Data Update Coordinator (consigliato)
+    ├── entity.py           # Classi base per le entità (consigliato)
+    ├── strings.json        # Traduzioni UI
+    ├── translations/       # Traduzioni aggiuntive
+    │   └── en.json
+    └── [platform].py       # Piattaforme (light, switch, sensor, etc.)
+```
+
+### Manifest.json - Campi Obbligatori
+Il file `manifest.json` deve contenere SEMPRE:
+```json
+{
+  "domain": "nome_integrazione",
+  "name": "Nome Leggibile",
+  "codeowners": ["@username"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nome_integrazione",
+  "issue_tracker": "https://github.com/username/repo/issues",
+  "requirements": ["libreria-pypi==1.0.0"],
+  "version": "1.0.0",
+  "iot_class": "cloud_polling|cloud_push|local_polling|local_push",
+  "dependencies": [],
+  "after_dependencies": []
+}
+```
+
+#### Campi Manifest - Dettagli
+- **domain**: snake_case, univoco, senza spazi o caratteri speciali
+- **config_flow**: DEVE essere `true` per tutte le nuove integrazioni
+- **iot_class**: Specificare correttamente il tipo di comunicazione
+- **requirements**: Versioni precise delle dipendenze PyPI
+- **version**: Semantic versioning (major.minor.patch)
+
+## Config Flow - Configurazione UI
+
+### Regole Config Flow
+1. **OBBLIGATORIO**: Ogni integrazione DEVE supportare configurazione tramite UI
+2. Implementare `config_flow.py` con classe che eredita da `ConfigFlow`
+3. Gestire validazione input utente con metodi async
+4. Supportare discovery automatico quando possibile
+5. Implementare `async_step_user()` come minimo
+6. Gestire errori con messaggi chiari in `strings.json`
+
+### Template Config Flow
+```python
+from homeassistant import config_entries
+from homeassistant.core import callback
+import voluptuous as vol
+
+from .const import DOMAIN
+
+class MyIntegrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow."""
+    
+    VERSION = 1
+    
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
+        
+        if user_input is not None:
+            # Validazione input
+            try:
+                # Verifica connessione/credenziali
+                await self._test_connection(user_input)
+                return self.async_create_entry(
+                    title=user_input["name"],
+                    data=user_input
+                )
+            except Exception:
+                errors["base"] = "cannot_connect"
+        
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({
+                vol.Required("host"): str,
+                vol.Required("api_key"): str,
+            }),
+            errors=errors
+        )
+```
+
+## Architettura dell'Integrazione
+
+### __init__.py - Entry Point
+```python
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.const import Platform
+
+from .const import DOMAIN
+from .coordinator import MyCoordinator
+
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up integration from a config entry."""
+    
+    # Inizializza coordinator
+    coordinator = MyCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    
+    # Salva coordinator in hass.data
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+    
+    # Setup platforms
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
+    return True
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    
+    return unload_ok
+```
+
+### Coordinator Pattern - FORTEMENTE CONSIGLIATO
+Usare `DataUpdateCoordinator` per gestire fetch dati centralizzato:
+
+```python
+from datetime import timedelta
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.core import HomeAssistant
+
+class MyCoordinator(DataUpdateCoordinator):
+    """Coordinator per gestire fetch dati."""
+    
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            logger,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=30),
+        )
+        self.api = MyAPI(entry.data["host"], entry.data["api_key"])
+    
+    async def _async_update_data(self):
+        """Fetch data from API."""
+        try:
+            return await self.api.fetch_data()
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}")
+```
+
+## Entità (Entities)
+
+### Regole per le Entità
+1. Ereditare sempre da classi base appropriate (`SensorEntity`, `SwitchEntity`, etc.)
+2. Usare `CoordinatorEntity` quando si usa un coordinator
+3. Implementare `unique_id` per ogni entità (OBBLIGATORIO)
+4. Implementare `device_info` per raggruppare entità
+5. NON fare polling diretto nelle entità, usare coordinator
+
+### Template Entity con Coordinator
+```python
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MySensorEntity(CoordinatorEntity, SensorEntity):
+    """Representation of a sensor."""
+    
+    def __init__(self, coordinator, device_id):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._device_id = device_id
+        self._attr_unique_id = f"{device_id}_sensor"
+        self._attr_name = "My Sensor"
+    
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self.coordinator.data[self._device_id]["value"]
+    
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": "Device Name",
+            "manufacturer": "Manufacturer",
+            "model": "Model",
+        }
+```
+
+## Best Practice per il Codice
+
+### Async/Await
+- SEMPRE usare metodi async per operazioni I/O
+- NON bloccare l'event loop con operazioni sincrone
+- Usare `hass.async_add_executor_job()` per codice bloccante
+
+### Gestione Errori
+- Catturare eccezioni specifiche, non generiche
+- Loggare errori con logger appropriato
+- Sollevare `UpdateFailed` nel coordinator per errori temporanei
+- Sollevare `ConfigEntryNotReady` in setup per errori di inizializzazione
+
+### Logging
+```python
+import logging
+_LOGGER = logging.getLogger(__name__)
+
+# Usare livelli appropriati:
+_LOGGER.debug("Debug info")      # Dettagli tecnici
+_LOGGER.info("Info message")     # Eventi normali
+_LOGGER.warning("Warning")       # Problemi non critici
+_LOGGER.error("Error")           # Errori gravi
+```
+
+### Type Hints
+- SEMPRE usare type hints per parametri e return values
+- Importare da `typing` per tipi complessi
+- Usare `from __future__ import annotations` per forward references
+
+### Naming Conventions
+- Classi: PascalCase
+- Funzioni/metodi: snake_case
+- Costanti: UPPER_SNAKE_CASE
+- Variabili private: _leading_underscore
+
+## Libreria API Esterna
+
+### Regole Libreria
+1. NON implementare logica API direttamente nell'integrazione
+2. Usare libreria Python di terze parti pubblicata su PyPI
+3. La libreria deve essere asincrona (supportare asyncio)
+4. Specificare la libreria in `requirements` del manifest
+
+### Se la Libreria Non Esiste
+- Creare libreria separata e pubblicarla su PyPI
+- La libreria deve essere indipendente da Home Assistant
+- Repository separato per la libreria
+- Testing della libreria separato
+
+## Testing
+
+### Test Obbligatori
+1. Test per config flow (user, import, errors)
+2. Test per setup/unload dell'integrazione
+3. Test per ogni piattaforma
+4. Coverage minimo: 90%
+
+### Struttura Test
+```
+tests/
+├── __init__.py
+├── conftest.py          # Fixtures comuni
+├── test_config_flow.py
+├── test_init.py
+└── test_sensor.py
+```
+
+## Documentazione
+
+### strings.json - OBBLIGATORIO
+```json
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup Integration",
+        "description": "Enter your credentials",
+        "data": {
+          "host": "Host",
+          "api_key": "API Key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
+```
+
+### Commenti nel Codice
+- Docstrings per classi e metodi pubblici
+- Commenti inline solo per logica complessa
+- Format: Google style docstrings
+
+## Integration Quality Scale
+
+### Livello Bronze (Minimo)
+- [x] Config flow implementato
+- [x] Test con coverage ≥90%
+- [x] Documentazione base
+- [x] Dependency constraints definiti
+- [x] Code owners assegnati
+
+### Livello Silver
+- [x] Tutto di Bronze
+- [x] Coordinator pattern implementato
+- [x] Reauthentication flow
+- [x] Diagnostics support
+- [x] Common modules (entity.py, coordinator.py)
+
+### Livello Gold
+- [x] Tutto di Silver
+- [x] Device info implementato
+- [x] Entity naming standardizzato
+- [x] Parallel updates
+- [x] Repair flows per problemi noti
+
+### Livello Platinum
+- [x] Tutto di Gold
+- [x] Test coverage 100%
+- [x] Performance ottimizzate
+- [x] Documentazione completa multilingua
+
+## Dipendenze e Requisiti
+
+### requirements.txt (per sviluppo)
+```
+homeassistant>=2024.1.0
+pytest>=7.0.0
+pytest-homeassistant-custom-component
+```
+
+### Versioni Python
+- Supportare versioni Python supportate da Home Assistant
+- Attualmente: Python 3.11+
+
+## Checklist Pre-Commit
+
+Prima di ogni commit, verificare:
+- [ ] Codice passa mypy (type checking)
+- [ ] Codice passa pylint
+- [ ] Codice passa black (formatting)
+- [ ] Test passano con coverage ≥90%
+- [ ] strings.json aggiornato
+- [ ] manifest.json valido
+- [ ] Nessun import di librerie non dichiarate
+
+## Stile Codice
+
+### Formattazione
+- Black per auto-formatting
+- Line length: 88 caratteri
+- Imports ordinati con isort
+
+### Lint
+- Pylint con configurazione Home Assistant
+- No disable comments senza giustificazione
+
+## Sicurezza
+
+### Gestione Credenziali
+- MAI hardcodare credenziali
+- Usare config entry per dati sensibili
+- NON loggare API keys o password
+- Considerare encryption per dati sensibili
+
+### API Calls
+- Timeout sempre specificati
+- Rate limiting rispettato
+- Retry logic per fallimenti temporanei
+- Validazione input utente
+
+## Device e Area
+
+### Device Info (CONSIGLIATO)
+Fornire informazioni complete sul dispositivo:
+```python
+{
+    "identifiers": {(DOMAIN, unique_id)},
+    "name": "Device Name",
+    "manufacturer": "Manufacturer",
+    "model": "Model",
+    "sw_version": "1.0.0",
+    "hw_version": "2.0",
+    "configuration_url": "http://device.local",
+}
+```
+
+## Risorse Ufficiali
+
+### Documentazione Principale
+- Core Development: https://developers.home-assistant.io/docs/development_index
+- Creating Integration: https://developers.home-assistant.io/docs/creating_integration_file_structure
+- Config Flow: https://developers.home-assistant.io/docs/config_entries_config_flow_handler
+- Quality Scale: https://developers.home-assistant.io/docs/core/integration-quality-scale
+
+### Community
+- Discord: #developers channel
+- Forum: https://community.home-assistant.io
+- GitHub: https://github.com/home-assistant/core
+
+## Note Finali
+
+Quando generi codice per questa integrazione:
+1. Segui SEMPRE queste regole
+2. Privilegia pattern asincroni
+3. Usa coordinator per fetch dati
+4. Implementa sempre config flow
+5. Scrivi test per ogni nuova funzionalità
+6. Mantieni compatibilità con versioni recenti di Home Assistant
+7. Documenta ogni classe e metodo pubblico
+8. Valida sempre input utente
+9. Gestisci errori in modo appropriato
+10. Punta almeno al livello Silver della Quality Scale
+

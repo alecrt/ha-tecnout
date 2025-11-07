@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate version
+        run: |
+          version=$(jq -r '.version' custom_components/ha_tecnout/manifest.json)
+          tag=${GITHUB_REF#refs/tags/v}
+          if [ "$version" != "$tag" ]; then
+            echo "Version in manifest.json ($version) does not match tag ($tag)"
+            exit 1
+          fi
+
+      - name: Create release zip
+        run: |
+          cd custom_components/ha_tecnout
+          zip -r ../../ha-tecnout.zip .
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./ha-tecnout.zip
+          asset_name: ha-tecnout.zip
+          asset_content_type: application/zip
+

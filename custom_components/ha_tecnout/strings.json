@@ -1,0 +1,79 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura TecnoAlarm TecnoOut",
+        "description": "Inserisci le credenziali per connetterti alla centrale TecnoAlarm",
+        "data": {
+          "host": "Indirizzo IP",
+          "port": "Porta",
+          "user_code": "Codice Utente",
+          "passphrase": "Passphrase",
+          "legacy": "Modalità Legacy",
+          "watchdog_interval": "Intervallo Watchdog (secondi)",
+          "control_pin": "PIN di Controllo (opzionale)"
+        },
+        "data_description": {
+          "host": "L'indirizzo IP della centrale TecnoAlarm",
+          "port": "La porta TCP (default: 10001)",
+          "user_code": "Il codice utente per l'autenticazione (0-999999)",
+          "passphrase": "La passphrase per la crittografia AES",
+          "legacy": "Abilita per hardware legacy",
+          "watchdog_interval": "Intervallo per il keep-alive (default: 30 secondi)",
+          "control_pin": "PIN numerico richiesto per armare/disarmare via servizi (lasciare vuoto per disabilitare)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossibile connettersi alla centrale",
+      "invalid_auth": "Autenticazione fallita, controlla codice utente e passphrase",
+      "unknown": "Errore sconosciuto"
+    },
+    "abort": {
+      "already_configured": "Questa centrale è già configurata"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "zone": {
+        "name": "Zona {name}"
+      }
+    },
+    "switch": {
+      "program": {
+        "name": "Programma {name}"
+      }
+    }
+  },
+  "services": {
+    "arm_program": {
+      "name": "Inserisci Programma",
+      "description": "Inserisce un programma di allarme con verifica PIN opzionale",
+      "fields": {
+        "program_id": {
+          "name": "ID Programma",
+          "description": "Numero del programma da inserire (1-N)"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "PIN di controllo (richiesto se configurato)"
+        }
+      }
+    },
+    "disarm_program": {
+      "name": "Disinserisci Programma",
+      "description": "Disinserisce un programma di allarme con verifica PIN opzionale",
+      "fields": {
+        "program_id": {
+          "name": "ID Programma",
+          "description": "Numero del programma da disinserire (1-N)"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "PIN di controllo (richiesto se configurato)"
+        }
+      }
+    }
+  }
+}
+

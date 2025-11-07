@@ -1,0 +1,7 @@
+{
+  "name": "TecnoAlarm TecnoOut",
+  "content_in_root": false,
+  "render_readme": true,
+  "domains": ["binary_sensor", "switch"]
+}
+
