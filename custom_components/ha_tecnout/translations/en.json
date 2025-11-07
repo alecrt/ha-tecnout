@@ -8,7 +8,7 @@
           "host": "IP Address",
           "port": "Port",
           "user_code": "User Code",
-          "passphrase": "Passphrase",
+          "passphrase": "Passphrase (optional)",
           "legacy": "Legacy Mode",
           "watchdog_interval": "Watchdog Interval (seconds)",
           "control_pin": "Control PIN (optional)"
@@ -17,7 +17,7 @@
           "host": "The IP address of the TecnoAlarm control panel",
           "port": "The TCP port (default: 10001)",
           "user_code": "The user code for authentication (0-999999)",
-          "passphrase": "The passphrase for AES encryption",
+          "passphrase": "The passphrase for AES encryption (leave empty if not configured)",
           "legacy": "Enable for legacy hardware",
           "watchdog_interval": "Interval for keep-alive (default: 30 seconds)",
           "control_pin": "Numeric PIN required to arm/disarm via services (leave empty to disable)"

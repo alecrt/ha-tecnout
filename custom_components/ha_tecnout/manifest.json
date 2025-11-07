@@ -6,7 +6,7 @@
   "documentation": "https://github.com/alecrt/ha-tecnout",
   "issue_tracker": "https://github.com/alecrt/ha-tecnout/issues",
   "requirements": ["pycryptodome>=3.20.0", "pydantic>=2.0.0"],
-  "version": "1.1.1",
+  "version": "1.1.2",
   "iot_class": "local_polling",
   "dependencies": [],
   "after_dependencies": []

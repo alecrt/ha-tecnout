@@ -33,7 +33,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_USER_CODE): int,
-        vol.Required(CONF_PASSPHRASE): str,
+        vol.Optional(CONF_PASSPHRASE, default=""): str,
         vol.Optional(CONF_LEGACY, default=DEFAULT_LEGACY): bool,
         vol.Optional(
             CONF_WATCHDOG_INTERVAL, default=DEFAULT_WATCHDOG_INTERVAL
@@ -54,7 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         host=data[CONF_HOST],
         port=data[CONF_PORT],
         user_code=data[CONF_USER_CODE],
-        passphrase=data[CONF_PASSPHRASE],
+        passphrase=data.get(CONF_PASSPHRASE, "") or "",
         legacy=data.get(CONF_LEGACY, DEFAULT_LEGACY),
         watchdog_interval=None,  # Disable watchdog during config flow test
     )

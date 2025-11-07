@@ -8,7 +8,7 @@
           "host": "Indirizzo IP",
           "port": "Porta",
           "user_code": "Codice Utente",
-          "passphrase": "Passphrase",
+          "passphrase": "Passphrase (opzionale)",
           "legacy": "Modalità Legacy",
           "watchdog_interval": "Intervallo Watchdog (secondi)",
           "control_pin": "PIN di Controllo (opzionale)"
@@ -17,7 +17,7 @@
           "host": "L'indirizzo IP della centrale TecnoAlarm",
           "port": "La porta TCP (default: 10001)",
           "user_code": "Il codice utente per l'autenticazione (0-999999)",
-          "passphrase": "La passphrase per la crittografia AES",
+          "passphrase": "La passphrase per la crittografia AES (lasciare vuoto se non configurata)",
           "legacy": "Abilita per hardware legacy",
           "watchdog_interval": "Intervallo per il keep-alive (default: 30 secondi)",
           "control_pin": "PIN numerico richiesto per armare/disarmare via servizi (lasciare vuoto per disabilitare)"
