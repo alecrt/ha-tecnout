@@ -42,6 +42,9 @@
     "switch": {
       "program": {
         "name": "Programma {name}"
+      },
+      "zone_isolation": {
+        "name": "Isolamento Zona {name}"
       }
     }
   },

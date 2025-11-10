@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 – 2025-11-10
+- Aggiunti switch per il controllo dell'isolamento delle zone
+- I programmi con nome predefinito "Program X" (non configurati) vengono ora esclusi automaticamente dall'interfaccia
+- Migliorata l'esperienza utente con entità più pulite e rilevanti
+
 ## 1.1.1 – 2025-11-07
 - Disattivato il watchdog durante i test di connessione nel config flow e garantita la chiusura del client anche in caso di errore.
 - Aumentato il timeout di connessione a 10 s per gestire reti lente o instabili.
