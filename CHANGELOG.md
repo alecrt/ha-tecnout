@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0 – 2025-11-12
+### ✨ Nuove Funzionalità
+- **Aggiunta piattaforma Alarm Control Panel**: I programmi di allarme sono ora disponibili come entità `alarm_control_panel` native di Home Assistant
+- **Supporto PIN integrato**: Richiesta PIN tramite tastierino numerico nativo nell'interfaccia utente
+- **Interfaccia migliorata**: Card `alarm-panel` standard con stati chiari (Disinserito, Inserito Totale, Inserito Parziale, Allarme Attivo)
+- **Compatibilità assistenti vocali**: Supporto migliorato per Google Home e Alexa
+
+### 🔄 Modifiche
+- **Rimossi switch per programmi**: I programmi non sono più disponibili come switch, solo tramite `alarm_control_panel` (più appropriato per sistemi di allarme)
+- **Switch solo per zone**: Gli switch ora controllano esclusivamente l'isolamento delle zone
+
+### 📚 Documentazione
+- Aggiornata `PIN_PROTECTION.md` con guida completa ai pannelli di controllo allarme
+- Aggiunti esempi di utilizzo con card `alarm-panel` e automazioni
+- Tabella comparativa tra Switch, Pannelli Allarme e Servizi
+
 ## 1.3.0 – 2025-11-10
 - Aggiunti switch per il controllo dell'isolamento delle zone
 - I programmi con nome predefinito "Program X" (non configurati) vengono ora esclusi automaticamente dall'interfaccia

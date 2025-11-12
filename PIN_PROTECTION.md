@@ -12,7 +12,7 @@ Durante la configurazione dell'integrazione, puoi specificare un **PIN di Contro
 
 - **Impostazioni** → **Dispositivi e Servizi** → **Aggiungi Integrazione** → **TecnoAlarm TecnoOut**
 - Nel campo **"PIN di Controllo (opzionale)"** inserisci un PIN numerico (es: `1234`)
-- Se lasci vuoto il campo, i servizi funzioneranno senza richiedere PIN
+- Se lasci vuoto il campo, i servizi e i pannelli allarme funzioneranno senza richiedere PIN
 
 ### 2. Comportamento
 
@@ -20,17 +20,18 @@ Durante la configurazione dell'integrazione, puoi specificare un **PIN di Contro
 
 Quando un PIN è configurato:
 
+- ✅ I **pannelli di controllo allarme** richiedono il PIN per armare/disarmare
 - ✅ I **servizi custom** richiedono il PIN per funzionare
-- ✅ Gli **switch** nella UI continuano a funzionare normalmente
+- ✅ Gli **switch** nella UI continuano a funzionare normalmente (senza PIN)
 - ✅ Il PIN è verificato lato server (sicuro)
-- ❌ Chiamate ai servizi senza PIN o con PIN errato vengono rifiutate
+- ❌ Azioni su pannelli allarme e servizi senza PIN o con PIN errato vengono rifiutate
 
 #### Senza PIN Configurato
 
 Se non configuri un PIN:
 
 - ✅ Tutto funziona normalmente senza restrizioni
-- ✅ Switch e servizi funzionano liberamente
+- ✅ Pannelli allarme, switch e servizi funzionano liberamente
 
 ## 🔧 Utilizzo dei Servizi
 
@@ -94,6 +95,93 @@ automation:
         data:
           program_id: 1  # Programma "Totale"
           pin: "1234"
+```
+
+## 🎛️ Pannelli di Controllo Allarme (Consigliato)
+
+L'integrazione crea automaticamente **Pannelli di Controllo Allarme** (Alarm Control Panel) per ogni programma configurato. Questi pannelli offrono un'interfaccia nativa di Home Assistant per gestire l'allarme con supporto PIN integrato.
+
+### Caratteristiche Principali
+
+- 🔐 **Richiesta PIN nativa**: Quando configuri un PIN, l'interfaccia mostrerà automaticamente un tastierino per inserirlo
+- 🎨 **Design standard HA**: Interfaccia nativa ben integrata con il resto di Home Assistant
+- 📱 **Compatibilità totale**: Funziona perfettamente con app mobili, dashboard, Google Home, Alexa
+- 🔔 **Stati chiari**: Mostra gli stati "Disinserito", "Inserito Totale", "Inserito Parziale", "Allarme Attivo", ecc.
+
+### Utilizzo nei Dashboard
+
+#### Card Alarm Panel Standard
+
+La card più semplice e consigliata:
+
+```yaml
+type: alarm-panel
+entity: alarm_control_panel.totale
+```
+
+Questa card mostrerà automaticamente:
+- Stato attuale del programma
+- Tastierino numerico per inserire il PIN (se configurato)
+- Pulsanti per armare/disarmare
+
+#### Card Personalizzata
+
+Puoi personalizzare l'aspetto:
+
+```yaml
+type: alarm-panel
+entity: alarm_control_panel.totale
+states:
+  - arm_away
+name: Allarme Casa
+```
+
+### Automazioni con Pannelli Allarme
+
+Puoi usare i pannelli allarme nelle automazioni:
+
+```yaml
+automation:
+  - alias: "Notifica quando allarme inserito"
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.totale
+        to: "armed_away"
+    action:
+      - service: notify.notify
+        data:
+          message: "Allarme inserito correttamente!"
+
+  - alias: "Notifica allarme attivo"
+    trigger:
+      - platform: state
+        entity_id: alarm_control_panel.totale
+        to: "triggered"
+    action:
+      - service: notify.mobile_app
+        data:
+          message: "⚠️ ALLARME ATTIVO!"
+          title: "Intrusione Rilevata"
+```
+
+### Inserimento/Disinserimento Programmatico
+
+Puoi inserire/disinserire via servizi:
+
+```yaml
+# Inserimento
+service: alarm_control_panel.alarm_arm_away
+target:
+  entity_id: alarm_control_panel.totale
+data:
+  code: "1234"  # Solo se configurato
+
+# Disinserimento
+service: alarm_control_panel.alarm_disarm
+target:
+  entity_id: alarm_control_panel.totale
+data:
+  code: "1234"  # Solo se configurato
 ```
 
 ## 📱 Utilizzo nell'Interfaccia
@@ -165,7 +253,8 @@ tap_action:
 ### Limitazioni
 
 - ⚠️ Gli **switch** nella UI non richiedono PIN (per usabilità)
-- ⚠️ Se vuoi protezione totale, usa **SOLO i servizi** nelle automazioni
+- ⚠️ I **pannelli allarme** richiedono PIN per disarmare se configurato
+- ⚠️ Se vuoi protezione totale su tutte le entità, usa **SOLO i pannelli allarme e i servizi** nelle automazioni
 - ⚠️ Il PIN è memorizzato nel database di HA (criptato)
 
 ## 🔄 Protezione Nativa Home Assistant (Opzionale)
@@ -272,17 +361,20 @@ automation:
 
 ## 🎯 Riepilogo
 
-| Feature | Switch UI | Servizi con PIN |
-|---------|-----------|-----------------|
-| Facile da usare | ✅ | ⚙️ |
-| Richiede PIN | ❌ | ✅ |
-| Protezione avanzata | ❌ | ✅ |
-| Automazioni | ✅ | ✅ |
-| Dashboard | ✅ | ✅ |
-| Scripts | ✅ | ✅ |
-| Notifiche errori | ❌ | ✅ |
+| Feature | Switch UI | Pannello Allarme | Servizi con PIN |
+|---------|-----------|------------------|-----------------|
+| Facile da usare | ✅ | ✅ | ⚙️ |
+| Richiede PIN | ❌ | ✅ | ✅ |
+| Protezione avanzata | ❌ | ✅ | ✅ |
+| Interfaccia nativa | ✅ | ✅ | ❌ |
+| Tastierino PIN | ❌ | ✅ | ❌ |
+| Automazioni | ✅ | ✅ | ✅ |
+| Dashboard | ✅ | ✅ | ✅ |
+| Scripts | ✅ | ✅ | ✅ |
+| Google/Alexa | ⚙️ | ✅ | ❌ |
+| Notifiche errori | ❌ | ✅ | ✅ |
 
-**Raccomandazione**: Usa **servizi con PIN** per automazioni critiche e switch per uso manuale quotidiano.
+**Raccomandazione**: Usa **Pannelli Allarme** per l'interfaccia utente (migliore esperienza con PIN), **servizi con PIN** per automazioni critiche, e **switch** solo per uso interno senza necessità di protezione.
 
 ---
 

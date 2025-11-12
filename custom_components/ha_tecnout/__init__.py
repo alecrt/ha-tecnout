@@ -22,7 +22,11 @@ from .coordinator import TecnoOutCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+]
 
 # Service schemas
 SERVICE_PROGRAM_SCHEMA = vol.Schema(

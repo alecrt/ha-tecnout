@@ -34,6 +34,18 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "alarm_program": {
+        "name": "{name}",
+        "state": {
+          "disarmed": "Disinserito",
+          "armed_away": "Inserito Totale",
+          "armed_home": "Inserito Parziale",
+          "arming": "Inserimento in Corso",
+          "triggered": "Allarme Attivo"
+        }
+      }
+    },
     "binary_sensor": {
       "zone": {
         "name": "Zona {name}"
@@ -46,6 +58,11 @@
       "zone_isolation": {
         "name": "Isolamento Zona {name}"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_pin": {
+      "message": "Codice PIN non valido o mancante"
     }
   },
   "services": {

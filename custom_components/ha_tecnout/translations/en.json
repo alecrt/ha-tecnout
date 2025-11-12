@@ -34,6 +34,18 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "alarm_program": {
+        "name": "{name}",
+        "state": {
+          "disarmed": "Disarmed",
+          "armed_away": "Armed Away",
+          "armed_home": "Armed Home",
+          "arming": "Arming",
+          "triggered": "Alarm Triggered"
+        }
+      }
+    },
     "binary_sensor": {
       "zone": {
         "name": "Zone {name}"
@@ -46,6 +58,11 @@
       "zone_isolation": {
         "name": "Zone Isolation {name}"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_pin": {
+      "message": "Invalid or missing PIN code"
     }
   },
   "services": {
