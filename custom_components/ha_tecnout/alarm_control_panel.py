@@ -81,7 +81,7 @@ class TecnoOutAlarmControlPanel(CoordinatorEntity[TecnoOutCoordinator], AlarmCon
         configured_pin = entry.data.get(CONF_CONTROL_PIN)
         if configured_pin:
             self._attr_code_format = CodeFormat.NUMBER
-            self._attr_code_arm_required = True
+            self._attr_code_arm_required = False  # PIN not required for arming
         else:
             self._attr_code_format = None
             self._attr_code_arm_required = False

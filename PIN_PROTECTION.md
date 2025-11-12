@@ -20,11 +20,11 @@ Durante la configurazione dell'integrazione, puoi specificare un **PIN di Contro
 
 Quando un PIN è configurato:
 
-- ✅ I **pannelli di controllo allarme** richiedono il PIN per armare/disarmare
-- ✅ I **servizi custom** richiedono il PIN per funzionare
+- ✅ I **pannelli di controllo allarme** richiedono il PIN solo per **disarmare** (non per armare)
+- ✅ I **servizi custom** richiedono il PIN per funzionare (sia armare che disarmare)
 - ✅ Gli **switch** nella UI continuano a funzionare normalmente (senza PIN)
 - ✅ Il PIN è verificato lato server (sicuro)
-- ❌ Azioni su pannelli allarme e servizi senza PIN o con PIN errato vengono rifiutate
+- ❌ Azioni di disinserimento senza PIN o con PIN errato vengono rifiutate
 
 #### Senza PIN Configurato
 
@@ -103,7 +103,8 @@ L'integrazione crea automaticamente **Pannelli di Controllo Allarme** (Alarm Con
 
 ### Caratteristiche Principali
 
-- 🔐 **Richiesta PIN nativa**: Quando configuri un PIN, l'interfaccia mostrerà automaticamente un tastierino per inserirlo
+- 🔐 **Richiesta PIN nativa per disarmare**: Quando configuri un PIN, l'interfaccia mostrerà automaticamente un tastierino per disinserire l'allarme
+- 🆓 **Inserimento libero**: L'inserimento dell'allarme NON richiede PIN (comportamento standard per maggiore praticità)
 - 🎨 **Design standard HA**: Interfaccia nativa ben integrata con il resto di Home Assistant
 - 📱 **Compatibilità totale**: Funziona perfettamente con app mobili, dashboard, Google Home, Alexa
 - 🔔 **Stati chiari**: Mostra gli stati "Disinserito", "Inserito Totale", "Inserito Parziale", "Allarme Attivo", ecc.
@@ -169,19 +170,17 @@ automation:
 Puoi inserire/disinserire via servizi:
 
 ```yaml
-# Inserimento
+# Inserimento (non richiede PIN)
 service: alarm_control_panel.alarm_arm_away
 target:
   entity_id: alarm_control_panel.totale
-data:
-  code: "1234"  # Solo se configurato
 
-# Disinserimento
+# Disinserimento (richiede PIN se configurato)
 service: alarm_control_panel.alarm_disarm
 target:
   entity_id: alarm_control_panel.totale
 data:
-  code: "1234"  # Solo se configurato
+  code: "1234"  # Obbligatorio se hai configurato un PIN
 ```
 
 ## 📱 Utilizzo nell'Interfaccia
@@ -364,17 +363,18 @@ automation:
 | Feature | Switch UI | Pannello Allarme | Servizi con PIN |
 |---------|-----------|------------------|-----------------|
 | Facile da usare | ✅ | ✅ | ⚙️ |
-| Richiede PIN | ❌ | ✅ | ✅ |
+| PIN per armare | ❌ | ❌ | ✅ |
+| PIN per disarmare | ❌ | ✅ | ✅ |
 | Protezione avanzata | ❌ | ✅ | ✅ |
 | Interfaccia nativa | ✅ | ✅ | ❌ |
-| Tastierino PIN | ❌ | ✅ | ❌ |
+| Tastierino PIN | ❌ | ✅ (solo disarmare) | ❌ |
 | Automazioni | ✅ | ✅ | ✅ |
 | Dashboard | ✅ | ✅ | ✅ |
 | Scripts | ✅ | ✅ | ✅ |
 | Google/Alexa | ⚙️ | ✅ | ❌ |
 | Notifiche errori | ❌ | ✅ | ✅ |
 
-**Raccomandazione**: Usa **Pannelli Allarme** per l'interfaccia utente (migliore esperienza con PIN), **servizi con PIN** per automazioni critiche, e **switch** solo per uso interno senza necessità di protezione.
+**Raccomandazione**: Usa **Pannelli Allarme** per l'interfaccia utente (migliore esperienza con PIN per disarmare), **servizi con PIN** per automazioni critiche dove serve protezione anche in inserimento, e **switch** solo per uso interno senza necessità di protezione.
 
 ---
 
