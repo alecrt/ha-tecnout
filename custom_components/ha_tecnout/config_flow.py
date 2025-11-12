@@ -63,7 +63,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     client = TecnoOutClient(
         host=data[CONF_HOST],
-        port=data[CONF_PORT],
+        port=int(data[CONF_PORT]),
         user_code=int(data[CONF_USER_CODE]),
         passphrase=data.get(CONF_PASSPHRASE, "") or "",
         legacy=data.get(CONF_LEGACY, DEFAULT_LEGACY),

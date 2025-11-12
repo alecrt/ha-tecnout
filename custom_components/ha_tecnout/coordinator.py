@@ -50,8 +50,8 @@ class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             self.client = TecnoOutClient(
                 host=self.entry.data[CONF_HOST],
-                port=self.entry.data[CONF_PORT],
-                user_code=self.entry.data[CONF_USER_CODE],
+                port=int(self.entry.data[CONF_PORT]),
+                user_code=int(self.entry.data[CONF_USER_CODE]),
                 passphrase=self.entry.data[CONF_PASSPHRASE],
                 legacy=self.entry.data.get(CONF_LEGACY, False),
                 watchdog_interval=self.entry.data.get(CONF_WATCHDOG_INTERVAL),
