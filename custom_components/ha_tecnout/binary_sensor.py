@@ -80,8 +80,8 @@ class TecnoOutZoneSensor(CoordinatorEntity[TecnoOutCoordinator], BinarySensorEnt
         zone = self._get_zone()
         if zone is None:
             return None
-        # Return True if zone has alarm or pre-alarm
-        return zone.alarm or zone.pre_alarm
+        # Return True if zone has alarm, tamper, or tamper alarm
+        return zone.zone_status or zone.zone_tamper_status or zone.zone_tamper_alarm
 
     @property
     def available(self) -> bool:
