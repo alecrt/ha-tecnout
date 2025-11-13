@@ -109,20 +109,21 @@ class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from TecnoOut."""
+        _LOGGER.debug("Init Client - _async_update_data")
         if self.client is None:
             await self._async_setup()
 
         # Update descriptions periodically (every 5 minutes)
         current_time = time.time()
         if current_time - self._last_descriptions_update >= DESCRIPTIONS_UPDATE_INTERVAL:
-            await self._async_update_descriptions()
+            await self._async_update_descriptions()            
 
         try:
             # Get general status (lightweight, always needed)
             general_status: GeneralStatus = await self.hass.async_add_executor_job(
                 self.client.get_general_status
             )
-
+            _LOGGER.debug("General Status: %s", general_status)
             # Get zones detailed status (critical for binary sensors)
             zones: list[ZoneDetailedStatus] = []
             if self._zones_count > 0:
@@ -133,7 +134,7 @@ class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 for zone in zones:
                     if 1 <= zone.idx <= len(self._zones_descriptions):
                         zone.description = self._zones_descriptions[zone.idx - 1]
-
+            _LOGGER.debug("Zones: %s", zones)
             # Get programs status (less critical for real-time updates)
             programs: list[ProgramStatus] = []
             if self._programs_count > 0:
@@ -144,7 +145,7 @@ class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 for program in programs:
                     if 1 <= program.idx <= len(self._programs_descriptions):
                         program.name = self._programs_descriptions[program.idx - 1]
-
+            _LOGGER.debug("Programs: %s", programs)
             return {
                 "general_status": general_status,
                 "zones": zones,
