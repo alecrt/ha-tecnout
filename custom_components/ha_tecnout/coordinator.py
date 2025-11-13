@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,6 +27,9 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Interval for updating descriptions (5 minutes)
+DESCRIPTIONS_UPDATE_INTERVAL = 300  # seconds
+
 
 class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching TecnoOut data."""
@@ -44,6 +48,7 @@ class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._programs_count: int = 0
         self._zones_descriptions: list[str] = []
         self._programs_descriptions: list[str] = []
+        self._last_descriptions_update: float = 0.0
 
     async def _async_setup(self) -> None:
         """Set up the client and get initial info."""
@@ -70,52 +75,74 @@ class TecnoOutCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._programs_count,
             )
 
-            # Get zones and programs descriptions
-            if self._zones_count > 0:
-                self._zones_descriptions = await self.hass.async_add_executor_job(
-                    self.client.get_zones_description, self._zones_count
-                )
-
-            if self._programs_count > 0:
-                self._programs_descriptions = await self.hass.async_add_executor_job(
-                    self.client.get_programs_description, self._programs_count
-                )
+            # Get zones and programs descriptions (initial load)
+            await self._async_update_descriptions()
 
         except Exception as err:
             _LOGGER.error("Error connecting to TecnoOut: %s", err)
             raise ConfigEntryNotReady(f"Error connecting to TecnoOut: {err}") from err
+
+    async def _async_update_descriptions(self) -> None:
+        """Update zones and programs descriptions from TecnoOut."""
+        if self.client is None:
+            return
+
+        try:
+            # Update zones descriptions
+            if self._zones_count > 0:
+                self._zones_descriptions = await self.hass.async_add_executor_job(
+                    self.client.get_zones_description, self._zones_count
+                )
+                _LOGGER.debug("Updated %s zone descriptions", len(self._zones_descriptions))
+
+            # Update programs descriptions
+            if self._programs_count > 0:
+                self._programs_descriptions = await self.hass.async_add_executor_job(
+                    self.client.get_programs_description, self._programs_count
+                )
+                _LOGGER.debug("Updated %s program descriptions", len(self._programs_descriptions))
+
+            self._last_descriptions_update = time.time()
+        except Exception as err:
+            _LOGGER.warning("Error updating descriptions: %s", err)
+            # Don't raise - descriptions are not critical for real-time updates
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from TecnoOut."""
         if self.client is None:
             await self._async_setup()
 
+        # Update descriptions periodically (every 5 minutes)
+        current_time = time.time()
+        if current_time - self._last_descriptions_update >= DESCRIPTIONS_UPDATE_INTERVAL:
+            await self._async_update_descriptions()
+
         try:
-            # Get general status
+            # Get general status (lightweight, always needed)
             general_status: GeneralStatus = await self.hass.async_add_executor_job(
                 self.client.get_general_status
             )
 
-            # Get zones detailed status
+            # Get zones detailed status (critical for binary sensors)
             zones: list[ZoneDetailedStatus] = []
             if self._zones_count > 0:
                 zones = await self.hass.async_add_executor_job(
                     self.client.get_zones_detail, self._zones_count
                 )
-                # Add descriptions to zones
+                # Add cached descriptions to zones (no API call needed)
                 for zone in zones:
-                    if zone.idx <= len(self._zones_descriptions):
+                    if 1 <= zone.idx <= len(self._zones_descriptions):
                         zone.description = self._zones_descriptions[zone.idx - 1]
 
-            # Get programs status
+            # Get programs status (less critical for real-time updates)
             programs: list[ProgramStatus] = []
             if self._programs_count > 0:
                 programs = await self.hass.async_add_executor_job(
                     self.client.get_programs_status, self._programs_count
                 )
-                # Add descriptions to programs
+                # Add cached descriptions to programs (no API call needed)
                 for program in programs:
-                    if program.idx <= len(self._programs_descriptions):
+                    if 1 <= program.idx <= len(self._programs_descriptions):
                         program.name = self._programs_descriptions[program.idx - 1]
 
             return {
